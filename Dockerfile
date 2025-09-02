@@ -1,4 +1,4 @@
-# Using Ubuntu 24.04 (Noble Numbat) as base
+# Use Ubuntu 24.04 (Noble Numbat) as base
 FROM ubuntu:24.04
 
 # Prevent APT from asking interactive questions
@@ -22,12 +22,11 @@ RUN apt-get update && apt-get install -y \
         make \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip & Python tooling
+# Upgrade pip & install Ansible (latest 2.16.x) + Python tooling
 RUN pip3 install --upgrade pip wheel && \
     pip3 install --upgrade cryptography cffi && \
-    pip3 install ansible-core==2.13.9 && \
-    pip3 install mitogen jmespath && \
-    pip3 install --upgrade pywinrm
+    pip3 install "ansible-core>=2.16,<2.17" && \
+    pip3 install mitogen jmespath pywinrm
 
 # Create Ansible directories
 RUN mkdir -p /etc/ansible /ansible /root/.ssh
@@ -53,7 +52,7 @@ ENV ANSIBLE_GATHERING=smart \
     PYTHONPATH=/ansible/lib \
     ANSIBLE_INVENTORY=/ansible/ansible_collections/confluent/platform/inventories/ansible-inventory.yml
 
-# Install Ansible collections
+# Install useful Ansible community collections
 RUN ansible-galaxy collection install ansible.posix community.general
 
 # Keep container running
