@@ -1,32 +1,28 @@
-# Use Ubuntu 24.04 (Noble Numbat) with systemd support
+# Base Ubuntu 24.04 with systemd support
 FROM jrei/systemd-ubuntu:24.04
 
 # Disable frontend dialogs while installing packages
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=non-interactive
 
-# Install SSH server + sudo
-RUN apt-get update \
-    && apt-get install -y openssh-server sudo \
+# Install SSH server and sudo
+RUN apt update \
+    && apt install -y openssh-server sudo \
     && mkdir -p /var/run/sshd
 
 # Set root password
 RUN echo 'root:root' | chpasswd
 
-# Add a new user 'admin'
-RUN useradd -rm -d /home/admin -s /bin/bash -g root -G sudo -u 1000 admin
+# Add a new user 'admin' with sudo privileges
+RUN useradd -rm -d /home/admin -s /bin/bash -g root -G sudo -u 1000 admin \
+    && echo 'admin:admin' | chpasswd
 
-# Set password for the 'admin' user
-RUN echo 'admin:admin' | chpasswd
-
-# Create .ssh directories and authorized_keys for root and admin
+# Create .ssh directory and authorized_keys file for root and admin
 RUN mkdir -p /root/.ssh /home/admin/.ssh \
     && touch /root/.ssh/authorized_keys /home/admin/.ssh/authorized_keys \
-    && chown admin:root /home/admin/.ssh /home/admin/.ssh/authorized_keys \
-    && chmod 700 /home/admin/.ssh \
-    && chmod 600 /home/admin/.ssh/authorized_keys
+    && chown -R admin:root /home/admin/.ssh
 
 # Expose SSH port
 EXPOSE 22
 
-# Start systemd (which also handles sshd)
+# Default command: start systemd (needed for ssh service inside container)
 CMD ["/lib/systemd/systemd"]
